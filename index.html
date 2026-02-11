@@ -133,11 +133,10 @@ function getIconName(label) {
     return 'component';
 }
 
-// 【修正箇所】ページ読み込み時の自動実行部分
+// ページ読み込み時に自動実行
 window.onload = function() {
     // パスを ./data.csv とすることで、同じ階層であることを明示
-    const base = location.pathname.replace(/\/[^/]*$/, '/');
-    fetch(base + 'data.csv')
+    fetch('./data.csv')
     .then(res => {
         if(!res.ok) {
             throw new Error(`ファイルが見つかりません (Status: ${res.status})。ファイル名が "data.csv" かつ index.html と同じ階層にあるか確認してください。`);
@@ -205,4 +204,34 @@ function runSimulation() {
     let filtered = masterData;
     selects.forEach(s => {
         if (s.value !== 'all') {
-            const val = is
+            const val = isNaN(s.value) ? s.value : Number(s.value);
+            filtered = filtered.filter(d => d[s.dataset.idx] === val);
+        }
+    });
+
+    const targetIdx = parseInt(document.getElementById('target-psychology').value);
+    const results = columns.arch.map(a => ({ label: a.label, r: calculateCorrelation(filtered, targetIdx, a.idx) })).sort((a, b) => b.r - a.r);
+
+    document.getElementById('n-display').innerText = `SAMPLE SIZE: N = ${filtered.length}`;
+    const grid = document.getElementById('card-grid');
+    
+    grid.style.opacity = 0;
+    setTimeout(() => {
+        grid.innerHTML = '';
+        results.forEach((res, i) => {
+            if (Math.abs(res.r) < 0.01) return;
+            const img = normImageUrlMap[normalize(res.label)];
+            const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div class="card-visual">${visual}</div><div class="card-content"><div class="card-label">${res.label}</div><div class="card-footer"><span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(3)}</span><span class="r-unit">Correlation</span></div></div>`;
+            grid.appendChild(card);
+            setTimeout(() => card.classList.add('is-visible'), i * 40);
+        });
+        lucide.createIcons();
+        grid.style.opacity = 1;
+    }, 200);
+}
+</script>
+</body>
+</html>
