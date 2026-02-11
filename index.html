@@ -169,62 +169,14 @@ window.onload = function () {
 };
 
 function setupFilters() {
-  const container = document.getElementById('filters');
-  container.innerHTML = '';
-
-  columns.attr.forEach(col => {
-    let values = [...new Set(masterData.map(d => d[col.idx]))]
-      .filter(v => v != null);
-
-    // ▼ 並び順ルール
-    if (col.name.includes("居住地方")) {
-      const regionOrder = [
-        "北海道・東北地方",
-        "関東地方",
-        "中部地方",
-        "近畿地方",
-        "中国・四国地方",
-        "九州・沖縄地方"
-      ];
-      values.sort((a, b) => {
-        const ai = regionOrder.indexOf(a);
-        const bi = regionOrder.indexOf(b);
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      });
-    }
-
-    if (col.name.includes("世帯年収")) {
-      const incomeOrder = [
-        "400万未満",
-        "400〜800万未満",
-        "800～1200万未満",
-        "1200万以上",
-        "わからない"
-      ];
-      values.sort((a, b) => {
-        const ai = incomeOrder.indexOf(a);
-        const bi = incomeOrder.indexOf(b);
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      });
-    }
-
-    // ▼ どちらにも当てはまらない列だけ文字列順
-    if (
-      !col.name.includes("居住地方") &&
-      !col.name.includes("世帯年収")
-    ) {
-      values.sort();
-    }
-
-    const div = document.createElement('div');
-    div.innerHTML = `
-      <label>${col.name}</label>
-      <select class="filter-select" data-idx="${col.idx}" onchange="runSimulation()">
-        <option value="all">ALL</option>
-        ${values.map(v => `<option value="${v}">${v}</option>`).join('')}
-      </select>`;
-    container.appendChild(div);
-  });
+    const container = document.getElementById('filters'); container.innerHTML = '';
+    columns.attr.forEach(col => {
+        const uniqueValues = [...new Set(masterData.map(d => d[col.idx]))].filter(v => v != null).sort();
+        const div = document.createElement('div');
+        div.innerHTML = `<label>${col.name}</label><select class="filter-select" data-idx="${col.idx}" onchange="runSimulation()"><option value="all">ALL</option>${uniqueValues.map(v => `<option value="${v}">${v}</option>`).join('')}</select>`;
+        container.appendChild(div);
+    });
+    
 }
 
 function setupPsychList() {
