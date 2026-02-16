@@ -208,4 +208,66 @@ function setupFilters() {
 }
 
 function setupPsychList() {
-    document.getElementById('target-
+    document.getElementById('target-psychology').innerHTML = columns.psych.map(p => `<option value="${p.idx}">${p.label}</option>`).join('');
+}
+
+function calculateCorrelation(data, idxX, idxY) {
+    const subset = data.filter(d => typeof d[idxX] === 'number' && typeof d[idxY] === 'number');
+    const n = subset.length; if (n < 2) return 0;
+    let sX=0, sY=0, sXY=0, sX2=0, sY2=0;
+    for(let i=0; i<n; i++) {
+        let x=subset[i][idxX], y=subset[i][idxY];
+        sX+=x; sY+=y; sXY+=x*y; sX2+=x*x; sY2+=y*y;
+    }
+    const num = (n*sXY)-(sX*sY), den = Math.sqrt(((n*sX2)-(sX*sX))*((n*sY2)-(sY*sY)));
+    return den===0 ? 0 : num/den;
+}
+
+function renderGrid(gridId, nId, data, targetIdx) {
+    const grid = document.getElementById(gridId);
+    const nDisplay = document.getElementById(nId);
+    const results = columns.arch.map(a => ({ label: a.label, r: calculateCorrelation(data, targetIdx, a.idx) })).sort((a, b) => b.r - a.r);
+
+    nDisplay.innerText = `N = ${data.length}`;
+    grid.style.opacity = 0;
+    
+    setTimeout(() => {
+        grid.innerHTML = '';
+        results.forEach((res, i) => {
+            if (Math.abs(res.r) < 0.01) return;
+            const img = normImageUrlMap[normalize(res.label)];
+            const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<div class="card-visual">${visual}</div><div class="card-content"><div class="card-label">${res.label}</div><div class="card-footer"><span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(3)}</span><span class="r-unit">Correlation</span></div></div>`;
+            grid.appendChild(card);
+            setTimeout(() => card.classList.add('is-visible'), i * 30);
+        });
+        lucide.createIcons();
+        grid.style.opacity = 1;
+    }, 200);
+}
+
+function runSimulation() {
+    const selects = document.querySelectorAll('.filter-select');
+    let filteredTotal = masterData;
+    selects.forEach(s => {
+        if (s.value !== 'all') {
+            const val = isNaN(s.value) ? s.value : Number(s.value);
+            filteredTotal = filteredTotal.filter(d => d[s.dataset.idx] === val);
+        }
+    });
+
+    document.getElementById('total-n').innerText = `TOTAL N = ${filteredTotal.length}`;
+    const targetIdx = parseInt(document.getElementById('target-psychology').value);
+
+    // 住宅とオフィスでデータを分割してレンダリング
+    const housingData = filteredTotal.filter(d => d[9] === '住宅');
+    const officeData = filteredTotal.filter(d => d[9] === 'オフィス');
+
+    renderGrid('grid-housing', 'n-housing', housingData, targetIdx);
+    renderGrid('grid-office', 'n-office', officeData, targetIdx);
+}
+</script>
+</body>
+</html>
