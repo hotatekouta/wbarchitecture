@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Architecture Psychology Optimization Engine | Comparison Mode</title>
+    <title>Architecture Psychology Optimization Engine | Visual Fixed</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -17,52 +17,27 @@
         
         .status-bar { background: #fff; padding: 10px 20px; border: 1px solid var(--border); margin-bottom: 20px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 配置の修正: Psychology(350px) / Attributes(1fr) */
-        .config-panel { 
-            display: grid; 
-            grid-template-columns: 350px 1fr; 
-            gap: 40px; 
-            background: white; 
-            padding: 30px; 
-            border: 1px solid var(--border); 
-            margin-bottom: 40px; 
-        }
-        
-        /* 左側: Psychology */
-        .target-section { 
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
-
-        /* 右側: Filters (左側に境界線を追加) */
-        .filter-panel { 
-            border-left: 1px solid var(--border); 
-            padding-left: 40px; 
-        }
-        
+        .config-panel { display: grid; grid-template-columns: 350px 1fr; gap: 40px; background: white; padding: 30px; border: 1px solid var(--border); margin-bottom: 40px; }
+        .filter-panel { border-left: 1px solid var(--border); padding-left: 40px; }
         .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         
         label { display: block; font-size: 0.65rem; font-weight: bold; color: #888; margin-bottom: 5px; text-transform: uppercase; }
         select { width: 100%; padding: 10px; border: 1px solid var(--border); font-size: 0.85rem; background: #fff; border-radius: 0; transition: 0.2s; }
-        select:focus { border-color: var(--primary); }
         .target-select { font-size: 1.1rem; font-weight: 300; background: #fafafa; border-bottom: 2px solid var(--primary); }
 
-        /* 2カラム比較エリア */
         .comparison-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
         .column-header { text-align: center; margin-bottom: 20px; padding: 10px; background: var(--primary); color: white; letter-spacing: 0.2em; font-weight: 200; text-transform: uppercase; font-size: 0.9rem; }
         .n-badge { font-size: 0.7rem; color: #aaa; margin-top: 5px; }
 
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; min-height: 400px; transition: opacity 0.3s ease; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; min-height: 400px; }
         
         .card { 
             background: var(--card-bg); border: 1px solid var(--border); 
             display: flex; flex-direction: column; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            opacity: 0; transform: translateY(20px) scale(0.95);
+            opacity: 0; transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
-        .card.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+        .card.is-visible { opacity: 1; transform: translateY(0); }
         .card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: var(--primary); }
         
         .card-visual { width: 100%; height: 140px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
@@ -70,18 +45,10 @@
         .icon-placeholder { color: #ccc; }
 
         .card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .card-label { font-size: 0.8rem; font-weight: 500; min-height: 3.2em; margin-bottom: 10px; letter-spacing: 0.02em; line-height: 1.5; }
+        .card-label { font-size: 0.8rem; font-weight: 500; min-height: 3.2em; margin-bottom: 10px; line-height: 1.5; }
         .card-footer { display: flex; justify-content: space-between; align-items: baseline; }
         .r-value { font-size: 1.5rem; font-weight: 200; font-family: 'Georgia', serif; }
         .pos { color: var(--accent-pos); } .neg { color: var(--accent-neg); }
-        .r-unit { font-size: 0.5rem; color: #aaa; text-transform: uppercase; margin-left: 4px; }
-
-        @media (max-width: 1100px) {
-            .comparison-layout { grid-template-columns: 1fr; }
-            .config-panel { grid-template-columns: 1fr; }
-            .filter-panel { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; }
-            .filter-grid { grid-template-columns: 1fr 1fr; }
-        }
     </style>
 </head>
 <body>
@@ -89,10 +56,10 @@
 <div class="container">
     <header>
         <h1 style="font-weight: 300; letter-spacing: 0.1em;">Architecture Psychology Engine</h1>
-        <div id="total-n" style="font-size: 0.8rem; font-weight: bold; letter-spacing: 0.1em;">TOTAL N = 0</div>
+        <div id="total-n" style="font-size: 0.8rem; font-weight: bold;">TOTAL N = 0</div>
     </header>
 
-    <div class="status-bar" id="status-bar">
+    <div class="status-bar">
         <span id="data-status">CSVをロード中...</span>
         <span id="file-info" style="color: var(--accent-pos);">data.csv</span>
     </div>
@@ -126,7 +93,8 @@
 let masterData = [];
 let columns = { attr: [], psych: [], arch: [] };
 
-const imageUrlMapNormalized = {
+// 画像URLリスト
+const imageUrlMap = {
   "心地のよい居場所がある": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-266x142_webp_a99830ec-ad0c-4b83-af07-9712e7573259.png",
   "快適な室温を保つことができる": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-266x142_webp_db45356c-6acc-408f-b887-89d8c508dc7d.png",
   "快適に感じる広さがある": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-266x141_webp_63c604f4-dbd1-430f-9818-0f1c12e38b32.png",
@@ -164,12 +132,19 @@ const imageUrlMapNormalized = {
   "植物（観葉植物、生花）が置かれている": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-266x141_webp_66c2c41b-a00b-4a8c-9cc9-237d0b5fdfef.png"
 };
 
-function normalize(str) { return str ? str.replace(/[\s\n\r]/g, "") : ""; }
+// 【強化】正規化関数：空白、改行、括弧類をすべて除去して比較
+function superNormalize(str) {
+    if (!str) return "";
+    return str.replace(/[\s\n\r（）\(\)]/g, "");
+}
+
 const normImageUrlMap = {};
-for (let key in imageUrlMapNormalized) { normImageUrlMap[normalize(key)] = imageUrlMapNormalized[key]; }
+for (let key in imageUrlMap) {
+    normImageUrlMap[superNormalize(key)] = imageUrlMap[key];
+}
 
 function getIconName(label) {
-    const l = normalize(label);
+    const l = superNormalize(label);
     if (l.includes('安心')) return 'shield';
     if (l.includes('音')) return 'volume-2';
     if (l.includes('視線')) return 'eye-off';
@@ -182,14 +157,13 @@ window.onload = function () {
         complete: function (results) {
             const raw = results.data;
             masterData = raw.slice(2);
-            // 建築タイプ(9)を属性リストから除外
             columns.attr = [2, 3, 4, 5, 6, 7, 8].map(idx => ({ idx, name: raw[0][idx] }));
             columns.psych = []; for (let i = 10; i <= 52; i++) columns.psych.push({ idx: i, label: raw[1][i] || raw[0][i] });
             columns.arch = []; for (let i = 53; i <= 98; i++) columns.arch.push({ idx: i, label: raw[1][i] || raw[0][i] });
 
             setupFilters();
             setupPsychList();
-            document.getElementById('data-status').innerText = "SUCCESS: データ同期完了";
+            document.getElementById('data-status').innerText = "SUCCESS: データの同期を完了しました";
             document.getElementById('main-ui').style.display = 'grid';
             document.getElementById('results-area').style.display = 'block';
             runSimulation();
@@ -235,7 +209,11 @@ function renderGrid(gridId, nId, data, targetIdx) {
         grid.innerHTML = '';
         results.forEach((res, i) => {
             if (Math.abs(res.r) < 0.01) return;
-            const img = normImageUrlMap[normalize(res.label)];
+            
+            // 【強化】正規化してURLを照合
+            const normLabel = superNormalize(res.label);
+            const img = normImageUrlMap[normLabel];
+            
             const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
             const card = document.createElement('div');
             card.className = 'card';
@@ -261,7 +239,6 @@ function runSimulation() {
     document.getElementById('total-n').innerText = `TOTAL N = ${filteredTotal.length}`;
     const targetIdx = parseInt(document.getElementById('target-psychology').value);
 
-    // 住宅とオフィスでデータを分割してレンダリング
     const housingData = filteredTotal.filter(d => d[9] === '住宅');
     const officeData = filteredTotal.filter(d => d[9] === 'オフィス');
 
