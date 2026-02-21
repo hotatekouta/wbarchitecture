@@ -13,28 +13,61 @@
         }
         body { font-family: "Helvetica Neue", Arial, "Hiragino Sans", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; }
         .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
-        header { border-bottom: 1px solid var(--primary); margin-bottom: 30px; padding-bottom: 20px; display: flex; flex-direction: column; align-items: flex-start; }
         
-        .title-row { display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
-        
+        /* ヘッダー調整：リンク追加 */
+        header { 
+            border-bottom: 1px solid var(--primary); 
+            margin-bottom: 30px; 
+            padding-bottom: 20px; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .nav-link { 
+            font-size: 0.8rem; 
+            text-decoration: none; 
+            color: var(--primary); 
+            border: 1px solid var(--primary); 
+            padding: 5px 15px; 
+            letter-spacing: 0.1em; 
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .nav-link:hover { background: var(--primary); color: #fff; }
+
         .description-text { 
             font-size: 0.85rem; 
             color: #555; 
             line-height: 1.8; 
-            margin-top: 15px; 
+            margin-top: 20px; 
             max-width: 1100px; 
             white-space: pre-wrap; 
         }
 
+        /* モーダル（About Us）のスタイル */
+        .modal {
+            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(255,255,255,0.95); overflow-y: auto;
+        }
+        .modal-content {
+            max-width: 800px; margin: 60px auto; padding: 40px;
+            animation: modalFade 0.5s ease;
+        }
+        @keyframes modalFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .close-btn { float: right; font-size: 1.5rem; cursor: pointer; font-weight: 100; }
+        .profile-name { font-size: 1.8rem; font-weight: 300; letter-spacing: 0.2em; margin-bottom: 5px; }
+        .profile-title { font-size: 0.9rem; color: var(--accent-pos); margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .profile-job { font-size: 0.85rem; line-height: 2; margin-bottom: 30px; color: #444; }
+        .profile-body { font-size: 0.9rem; line-height: 2; color: #333; text-align: justify; }
+
         .status-bar { background: #fff; padding: 10px 20px; border: 1px solid var(--border); margin-bottom: 20px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
 
         .config-panel { display: grid; grid-template-columns: 350px 1fr; gap: 40px; background: white; padding: 30px; border: 1px solid var(--border); margin-bottom: 40px; }
-        .target-section { display: flex; flex-direction: column; }
         .filter-panel { border-left: 1px solid var(--border); padding-left: 40px; }
         .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         
         label { display: block; font-size: 0.65rem; font-weight: bold; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        select { width: 100%; padding: 10px; border: 1px solid var(--border); font-size: 0.85rem; background: #fff; border-radius: 0; transition: 0.2s; }
+        select { width: 100%; padding: 10px; border: 1px solid var(--border); font-size: 0.85rem; background: #fff; border-radius: 0; }
         .target-select { font-size: 1.1rem; font-weight: 300; background: #fafafa; border-bottom: 2px solid var(--primary); }
 
         .comparison-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
@@ -42,14 +75,12 @@
         .n-badge { font-size: 0.7rem; color: #aaa; margin-top: 5px; }
 
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; min-height: 400px; }
-        
         .card { 
             background: var(--card-bg); border: 1px solid var(--border); 
-            display: flex; flex-direction: column; 
-            opacity: 0; transform: translateY(20px) scale(0.95);
+            display: flex; flex-direction: column; opacity: 0; transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
-        .card.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+        .card.is-visible { opacity: 1; transform: translateY(0); }
         .card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: var(--primary); }
         
         .card-visual { width: 100%; height: 140px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
@@ -60,7 +91,7 @@
         .card-footer { display: flex; justify-content: space-between; align-items: baseline; }
         .r-value { font-size: 1.6rem; font-weight: 200; font-family: 'Georgia', serif; }
         .pos { color: var(--accent-pos); } .neg { color: var(--accent-neg); }
-        .r-unit { font-size: 0.5rem; color: #aaa; text-transform: uppercase; margin-left: 4px; }
+        .r-unit { font-size: 0.5rem; color: #aaa; margin-left: 4px; }
 
         @media (max-width: 1100px) {
             .comparison-layout, .config-panel { grid-template-columns: 1fr; }
@@ -70,10 +101,32 @@
 </head>
 <body>
 
+<div id="aboutModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeAbout()">&times; CLOSE</span>
+        <div class="profile-name">岡 昇平</div>
+        <div class="profile-title">一級建築士</div>
+        <div class="profile-job">
+            設計事務所岡昇平 代表、仏生山温泉 番台、仏生山まちぐるみ旅館 代表、スペースシンタックス・ジャパン 取締役<br>
+            慶應義塾大学大学院 システムデザイン・マネジメント研究科 特任講師<br>
+            岡山県立大学 デザイン学部 建築学科 非常勤講師
+        </div>
+        <div class="profile-body">
+            建築設計、温泉のこと、まちづくり、を本業としている。<br><br>
+            建築設計では、新しい価値と魅力づくりをベースとしたうえで、居心地の良さを大切にした住宅、オフィス、商業施設等の設計を行う。自由度が小さく、人の側に主体性がない空間を「やらされ建築」と呼び、心的要因に由来する居心地の良さや、人と人との関係性をウェルビーイングの視点から研究開発を行っている。<br><br>
+            温泉のことは、日帰り温浴施設である仏生山温泉を2005年に立ち上げ、計画、設計、運営までを担う。仏生山温泉では、すべての浴槽で源泉掛け流しを楽しめるようになっている。また、湯船で読書ができるなど長時間滞在を推奨し、温泉とともに過ごす前後の時間も大切にしている。トリップアドバイザーのランキングでは「旅好きが選ぶ！日本人に人気の日帰り温泉&スパ」2019年、2020年にそれぞれ全国1位に選ばれている。そのほか、長門湯本温泉 恩湯、湯河原惣湯 惣湯テラス、榊原温泉 禊湯など、全国各地で温浴施設のディレクション、設計、運営、コンサルタントを行う。<br><br>
+            まちづくりでは、まち全体を旅館に見立てる「仏生山まちぐるみ旅館」を2012年から進めている。コンセプトの「にやにやしながら暮らす」は主観的ウェルビーイングを高めるまちづくりである。地域の共有価値として位置付けている「お店」が10数年で30店程度増加している。共著書に「地方で建築を仕事にする」、「プロジェクト図解 地域の場を設計して、運営する」がある。
+        </div>
+    </div>
+</div>
+
 <div class="container">
     <header>
-        <div class="title-row">
-            <h1 style="font-weight: 300; letter-spacing: 0.1em;">Architecture Psychology Engine</h1>
+        <div class="header-top">
+            <h1 style="font-weight: 300; letter-spacing: 0.1em; margin:0;">Architecture Psychology Engine</h1>
+            <a class="nav-link" onclick="openAbout()">ABOUT US</a>
+        </div>
+        <div class="title-row" style="margin-top:20px;">
             <div id="total-n" style="font-size: 0.8rem; font-weight: bold; letter-spacing: 0.1em;">TOTAL N = 0</div>
         </div>
         <p class="description-text">本サイトは、「主観的ウェルビーイング」と「空間の構成要素」の相関係数をもとに、影響の大きい要素の把握や、要素同士の比較ができる可視化ツールです。
@@ -115,6 +168,11 @@
 <script>
 let masterData = [];
 let columns = { attr: [], psych: [], arch: [] };
+
+// モーダル制御関数
+function openAbout() { document.getElementById('aboutModal').style.display = "block"; }
+function closeAbout() { document.getElementById('aboutModal').style.display = "none"; }
+window.onclick = function(event) { if (event.target == document.getElementById('aboutModal')) closeAbout(); }
 
 const imageUrlMap = {
   "心地のよい居場所がある": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-266x142_webp_a99830ec-ad0c-4b83-af07-9712e7573259.png",
@@ -227,7 +285,6 @@ function renderGrid(gridId, nId, data, targetIdx) {
             const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
             const card = document.createElement('div');
             card.className = 'card';
-            // 【修正箇所】 .toFixed(2) に変更
             card.innerHTML = `<div class="card-visual">${visual}</div><div class="card-content"><div class="card-label">${res.label}</div><div class="card-footer"><span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(2)}</span><span class="r-unit">Correlation</span></div></div>`;
             grid.appendChild(card);
             setTimeout(() => card.classList.add('is-visible'), i * 30);
