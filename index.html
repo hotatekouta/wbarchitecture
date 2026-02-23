@@ -11,6 +11,7 @@
         :root {
             --primary: #1a1a1a; --accent-pos: #d4a373; --accent-neg: #457b9d;
             --bg: #f8f8f8; --card-bg: #ffffff; --text: #222; --border: #eeeeee;
+            --rank-red: #e74c3c;
         }
         body { font-family: "Helvetica Neue", Arial, "Hiragino Sans", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; }
         .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
@@ -41,25 +42,34 @@
         .n-badge { font-size: 0.7rem; color: #aaa; margin-top: 5px; }
 
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; min-height: 400px; }
+        
+        /* カード本体 */
         .card { 
             background: var(--card-bg); border: 1px solid var(--border); 
             display: flex; flex-direction: column; opacity: 0; transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative; /* 順位バッジ用 */
         }
         .card.is-visible { opacity: 1; transform: translateY(0); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: var(--primary); }
+
+        /* 順位バッジ */
+        .rank-badge {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            font-family: 'Georgia', serif; font-weight: bold;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+        .rank-top { color: var(--rank-red); font-size: 2rem; }
+        .rank-normal { color: var(--text); font-size: 1rem; opacity: 0.5; top: 5px; left: 5px; }
+        
         .card-visual { width: 100%; height: 140px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
         .card-visual img { width: 100%; height: 100%; object-fit: cover; }
         .card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .card-label { font-size: 0.8rem; font-weight: 500; min-height: 3.2em; margin-bottom: 10px; line-height: 1.5; }
+        .card-label { font-size: 0.8rem; font-weight: 500; min-height: 3.2em; margin-bottom: 10px; line-height: 1.5; padding-top: 5px; }
         .card-footer { display: flex; justify-content: space-between; align-items: baseline; }
         .r-value { font-size: 1.6rem; font-weight: 200; font-family: 'Georgia', serif; }
         .pos { color: var(--accent-pos); } .neg { color: var(--accent-neg); }
         .r-unit { font-size: 0.5rem; color: #aaa; margin-left: 4px; }
-
-        @media (max-width: 1100px) {
-            .comparison-layout, .config-panel { grid-template-columns: 1fr; }
-            .filter-panel { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; }
-        }
     </style>
 </head>
 <body>
@@ -148,7 +158,7 @@ const imageUrlMap = {
 "目的の場所に合理的な経路で移動ができる": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_686ea138-9992-4560-8fe6-c59c008d3546.png",
 "自由に過ごし方を決めることができる": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_bb7a27fa-eba7-4964-b030-ca4fc088f776.png",
 "用途がない空間に心地よさを感じる": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_5a5e503f-bd93-4ace-903c-5792c6fd9604.png",
-"芸術を楽しむことができる": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_e4598144-1f48-4c79-a49c-3065f281aa45.png",
+"芸術を楽しむことができる": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_e4598144-1f48-4c79-a39c-3065f281aa45.png",
 "自分以外の誰かとコミュニケーションを取りやすい": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_7467e6d7-bae2-44bf-b5c1-68929d11ae80.png",
 "自分以外の誰かと適度な距離感を保てて快適である": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_25795e35-cca3-4510-933f-1f982dd5d17a.png",
 "自分以外の人の視線が気にならない": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-467x247_webp_5919edb8-c86c-425d-88d5-0de4d00be8ca.png",
@@ -226,13 +236,30 @@ function renderGrid(gridId, nId, data, targetIdx) {
     const results = columns.arch.map(a => ({ label: a.label, r: calculateCorrelation(data, targetIdx, a.idx) })).sort((a, b) => b.r - a.r);
     nDisplay.innerText = `N = ${data.length}`;
     grid.innerHTML = '';
+    
+    let displayRank = 1;
     results.forEach((res, i) => {
         if (Math.abs(res.r) < 0.01) return;
+        
+        const rank = displayRank++;
+        const rankClass = rank <= 10 ? 'rank-top' : 'rank-normal';
+        
         const img = normMap[superNormalize(res.label)];
         const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
+        
         const card = document.createElement('div');
         card.className = 'card is-visible';
-        card.innerHTML = `<div class="card-visual">${visual}</div><div class="card-content"><div class="card-label">${res.label}</div><div class="card-footer"><span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(2)}</span><span class="r-unit">Correlation</span></div></div>`;
+        card.innerHTML = `
+            <div class="rank-badge ${rankClass}">${rank}</div>
+            <div class="card-visual">${visual}</div>
+            <div class="card-content">
+                <div class="card-label">${res.label}</div>
+                <div class="card-footer">
+                    <span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(2)}</span>
+                    <span class="r-unit">Correlation</span>
+                </div>
+            </div>
+        `;
         grid.appendChild(card);
     });
     lucide.createIcons();
@@ -255,7 +282,6 @@ function runSimulation() {
     renderGrid('grid-office', 'n-office', officeData, targetIdx);
 }
 
-// プレビュー画面生成
 function generatePreview() {
     const targetSelect = document.getElementById('target-psychology');
     const targetText = targetSelect.options[targetSelect.selectedIndex].text;
