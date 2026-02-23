@@ -24,7 +24,6 @@
         }
         .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         
-        /* PRINTバナー */
         .print-btn {
             background: var(--primary);
             color: #fff;
@@ -72,9 +71,6 @@
         .pos { color: var(--accent-pos); } .neg { color: var(--accent-neg); }
         .r-unit { font-size: 0.5rem; color: #aaa; margin-left: 4px; }
 
-        /* PDF出力用の非表示テンプレート */
-        #pdf-template { display: none; }
-
         @media (max-width: 1100px) {
             .comparison-layout, .config-panel { grid-template-columns: 1fr; }
             .filter-panel { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; }
@@ -87,14 +83,14 @@
     <header>
         <div class="header-top">
             <h1 style="font-weight: 300; letter-spacing: 0.1em; margin:0;">ウェルビーイングと空間要素</h1>
-            <button class="print-btn" onclick="generatePDF()">
+            <button class="print-btn" onclick="generatePreview()">
                 <i data-lucide="printer" size="16"></i> PRINT
             </button>
         </div>
         <div class="title-row" style="margin-top:20px;">
             <div id="total-n" style="font-size: 0.8rem; font-weight: bold; letter-spacing: 0.1em;">TOTAL N = 0</div>
         </div>
-        <p class="description-text">本サイトは、「主観的ウェルビーイング」と「空間の構成要素」の相関係数をもとに、影響の大きい要素の把握や、要素同士の比較ができる可視化ツールです。</p>
+        <p class="description-text">本サイトは、「主観的ウェルビーイング」と「空間の構成要素」の相関係数をもとに可視化するツールです。</p>
     </header>
 
     <div class="status-bar" id="status-bar">
@@ -198,13 +194,11 @@ window.onload = function () {
             masterData = raw.slice(2);
             columns.attr = [2, 3, 4].map(idx => ({ idx, name: raw[0][idx] }));
             columns.psych = []; for (let i = 10; i <= 52; i++) columns.psych.push({ idx: i, label: raw[1][i] || raw[0][i] });
-            
             columns.arch = []; 
             for (let i = 53; i <= 98; i++) {
                 if (i === 84) continue;
                 columns.arch.push({ idx: i, label: raw[1][i] || raw[0][i] });
             }
-
             setupFilters();
             setupPsychList();
             document.getElementById('data-status').innerText = "SUCCESS: データ同期完了";
@@ -245,25 +239,18 @@ function renderGrid(gridId, nId, data, targetIdx) {
     const grid = document.getElementById(gridId);
     const nDisplay = document.getElementById(nId);
     const results = columns.arch.map(a => ({ label: a.label, r: calculateCorrelation(data, targetIdx, a.idx) })).sort((a, b) => b.r - a.r);
-
     nDisplay.innerText = `N = ${data.length}`;
-    grid.style.opacity = 0;
-    
-    setTimeout(() => {
-        grid.innerHTML = '';
-        results.forEach((res, i) => {
-            if (Math.abs(res.r) < 0.01) return;
-            const img = normMap[superNormalize(res.label)];
-            const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<div class="card-visual">${visual}</div><div class="card-content"><div class="card-label">${res.label}</div><div class="card-footer"><span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(2)}</span><span class="r-unit">Correlation</span></div></div>`;
-            grid.appendChild(card);
-            setTimeout(() => card.classList.add('is-visible'), i * 30);
-        });
-        lucide.createIcons();
-        grid.style.opacity = 1;
-    }, 200);
+    grid.innerHTML = '';
+    results.forEach((res, i) => {
+        if (Math.abs(res.r) < 0.01) return;
+        const img = normMap[superNormalize(res.label)];
+        const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
+        const card = document.createElement('div');
+        card.className = 'card is-visible';
+        card.innerHTML = `<div class="card-visual">${visual}</div><div class="card-content"><div class="card-label">${res.label}</div><div class="card-footer"><span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(2)}</span><span class="r-unit">Correlation</span></div></div>`;
+        grid.appendChild(card);
+    });
+    lucide.createIcons();
 }
 
 function runSimulation() {
@@ -275,122 +262,98 @@ function runSimulation() {
             filteredTotal = filteredTotal.filter(d => d[s.dataset.idx] === val);
         }
     });
-
     document.getElementById('total-n').innerText = `TOTAL N = ${filteredTotal.length}`;
     const targetIdx = parseInt(document.getElementById('target-psychology').value);
-
     const housingData = filteredTotal.filter(d => superNormalize(String(d[9])) === "住宅");
     const officeData = filteredTotal.filter(d => superNormalize(String(d[9])) === "オフィス");
-
     renderGrid('grid-housing', 'n-housing', housingData, targetIdx);
     renderGrid('grid-office', 'n-office', officeData, targetIdx);
 }
 
-// PDF生成メイン関数
-async function generatePDF() {
+// プレビュー画面の生成
+function generatePreview() {
     const targetSelect = document.getElementById('target-psychology');
-    const targetPsychText = targetSelect.options[targetSelect.selectedIndex].text;
-    
-    // 現在のフィルター設定を取得
-    const filterInfo = Array.from(document.querySelectorAll('.filter-select'))
-        .map(s => {
-            const label = s.previousElementSibling.innerText;
-            return `${label}: ${s.value === 'all' ? 'すべて' : s.value}`;
-        }).join(' / ');
+    const targetText = targetSelect.options[targetSelect.selectedIndex].text;
+    const filterInfo = Array.from(document.querySelectorAll('.filter-select')).map(s => `${s.previousElementSibling.innerText}: ${s.value === 'all' ? 'ALL' : s.value}`).join(' / ');
 
-    // 一時的な印刷用コンテナを作成
-    const printView = document.createElement('div');
-    printView.style.padding = '30px';
-    printView.style.background = '#fff';
-    printView.style.color = '#333';
-    printView.style.fontFamily = 'sans-serif';
+    const win = window.open("", "_blank");
+    win.document.write(`
+        <html>
+        <head>
+            <title>Preview: ウェルビーイングと空間要素</title>
+            <style>
+                body { font-family: sans-serif; padding: 40px; color: #333; background: #525659; display: flex; justify-content: center; }
+                .page { background: white; width: 210mm; min-height: 297mm; padding: 20mm; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; }
+                .header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                .title { font-size: 1.4rem; margin: 0; font-weight: bold; }
+                .meta-box { background: #f5f5f5; padding: 15px; margin-bottom: 20px; font-size: 0.8rem; border: 1px solid #eee; }
+                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                .col-title { background: #000; color: #fff; text-align: center; padding: 5px; font-size: 0.75rem; margin-bottom: 10px; }
+                .item-row { display: flex; align-items: center; border-bottom: 1px solid #eee; padding: 5px 0; font-size: 0.65rem; page-break-inside: avoid; }
+                .rank { width: 15px; color: #999; font-weight: bold; }
+                .img-thumb { width: 40px; height: 25px; object-fit: cover; margin: 0 10px; border: 1px solid #eee; }
+                .label { flex-grow: 1; margin-right: 10px; line-height: 1.2; }
+                .val { font-weight: bold; font-family: serif; font-size: 0.9rem; }
+                .btn-area { position: fixed; top: 20px; right: 20px; z-index: 100; }
+                .dl-btn { background: #d4a373; color: white; border: none; padding: 15px 30px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+            </style>
+        </head>
+        <body>
+            <div class="btn-area"><button class="dl-btn" onclick="window.parent.exportPDF(document.getElementById('pdf-root'), '${targetText}')">PDFとして保存・印刷</button></div>
+            <div class="page" id="pdf-root">
+                <div class="header">
+                    <div class="title">ウェルビーイングと空間要素</div>
+                    <div style="font-size: 0.7rem; color: #666; margin-top: 5px;">Architecture Psychology Correlation Report</div>
+                </div>
+                <div class="meta-box">
+                    <strong>Target Psychology:</strong> ${targetText}<br>
+                    <strong>Attributes:</strong> ${filterInfo}
+                </div>
+                <div class="grid">
+                    ${['Residential', 'Office'].map(type => {
+                        const gridId = type === 'Residential' ? 'grid-housing' : 'grid-office';
+                        const nText = document.getElementById(type === 'Residential' ? 'n-housing' : 'n-office').innerText;
+                        const cards = Array.from(document.getElementById(gridId).querySelectorAll('.card')).slice(0, 10);
+                        return `
+                            <div>
+                                <div class="col-title">${type} (${nText})</div>
+                                ${cards.map((card, idx) => {
+                                    const label = card.querySelector('.card-label').innerText;
+                                    const val = card.querySelector('.r-value').innerText;
+                                    const img = card.querySelector('img') ? card.querySelector('img').src : '';
+                                    return `
+                                        <div class="item-row">
+                                            <div class="rank">${idx + 1}</div>
+                                            ${img ? `<img src="${img}" class="img-thumb">` : `<div class="img-thumb" style="background:#f0f0f0"></div>`}
+                                            <div class="label">${label}</div>
+                                            <div class="val">${val}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="margin-top: 30px; font-size: 0.6rem; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
+                    ※ 本データは統計的相関を示すものであり、因果関係を保証するものではありません。
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    win.document.close();
 
-    // 1. ヘッダー
-    printView.innerHTML = `
-        <div style="border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px;">
-            <h1 style="font-size: 1.5rem; margin: 0; letter-spacing: 0.1em;">Architecture Psychology Report</h1>
-            <p style="font-size: 0.75rem; color: #888; margin-top: 5px;">Created with Well-being Visualization Tool</p>
-        </div>
-        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #eee; margin-bottom: 30px;">
-            <p style="font-size: 0.7rem; color: #888; margin: 0; text-transform: uppercase; font-weight: bold;">Target Psychology</p>
-            <p style="font-size: 1.2rem; margin: 5px 0 15px 0; font-weight: bold;">${targetPsychText}</p>
-            <p style="font-size: 0.7rem; color: #888; margin: 0; text-transform: uppercase; font-weight: bold;">Attribute Filters</p>
-            <p style="font-size: 0.85rem; margin: 5px 0 0 0;">${filterInfo}</p>
-        </div>
-        <p style="font-size: 0.8rem; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 5px; font-weight: bold;">TOP 10 ELEMENTS COMPARISON</p>
-    `;
-
-    // 2. 比較グリッド（2カラム）
-    const gridContainer = document.createElement('div');
-    gridContainer.style.display = 'grid';
-    gridContainer.style.gridTemplateColumns = '1fr 1fr';
-    gridContainer.style.gap = '30px';
-
-    // 住宅・オフィスそれぞれのトップ10を取得して追加
-    const types = [
-        { label: 'Residential', data: masterData.filter(d => superNormalize(String(d[9])) === "住宅") },
-        { label: 'Office', data: masterData.filter(d => superNormalize(String(d[9])) === "オフィス") }
-    ];
-
-    const targetIdx = parseInt(targetSelect.value);
-
-    types.forEach(type => {
-        let subset = type.data;
-        // 現在のフィルターを適用
-        document.querySelectorAll('.filter-select').forEach(s => {
-            if (s.value !== 'all') {
-                const val = isNaN(s.value) ? s.value : Number(s.value);
-                subset = subset.filter(d => d[s.dataset.idx] === val);
-            }
-        });
-
-        const results = columns.arch
-            .map(a => ({ label: a.label, r: calculateCorrelation(subset, targetIdx, a.idx) }))
-            .sort((a, b) => b.r - a.r)
-            .slice(0, 10); // 上位10位
-
-        const col = document.createElement('div');
-        col.innerHTML = `
-            <div style="background: #000; color: #fff; text-align: center; padding: 5px; font-size: 0.8rem; letter-spacing: 0.1em; margin-bottom: 15px;">${type.label} (N=${subset.length})</div>
-            <div id="print-grid-${type.label}" style="display: flex; flex-direction: column; gap: 10px;"></div>
-        `;
-
-        const cardsList = col.querySelector(`#print-grid-${type.label}`);
-        results.forEach((res, rank) => {
-            const card = document.createElement('div');
-            card.style.border = '1px solid #eee';
-            card.style.display = 'flex';
-            card.style.alignItems = 'center';
-            card.style.padding = '8px';
-            card.style.fontSize = '0.7rem';
-            
-            const imgUrl = normMap[superNormalize(res.label)];
-            const imgHtml = imgUrl ? `<img src="${imgUrl}" style="width: 50px; height: 35px; object-fit: cover; margin-right: 10px; border: 1px solid #eee;">` : `<div style="width: 50px; height: 35px; background: #f0f0f0; margin-right: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.4rem; color: #ccc;">ICON</div>`;
-
-            card.innerHTML = `
-                <div style="font-weight: bold; width: 20px; color: #ccc;">${rank + 1}</div>
-                ${imgHtml}
-                <div style="flex-grow: 1; padding-right: 10px;">${res.label}</div>
-                <div style="font-weight: bold; color: ${res.r >= 0 ? '#d4a373' : '#457b9d'}">${res.r.toFixed(2)}</div>
-            `;
-            cardsList.appendChild(card);
-        });
-        gridContainer.appendChild(col);
-    });
-
-    printView.appendChild(gridContainer);
-
-    // PDFオプション
-    const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `Arch-Psych-Report_${targetPsychText}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    // 子ウィンドウから親のPDF出力関数を呼び出すためのブリッジ
+    win.exportPDF = (element, title) => {
+        const opt = {
+            margin: 10,
+            filename: `ウェルビーイングと空間要素_${title}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 3, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
     };
-
-    // 出力
-    html2pdf().set(opt).from(printView).save();
 }
 </script>
 </body>
