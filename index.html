@@ -43,21 +43,6 @@
             white-space: pre-wrap; 
         }
 
-        .modal {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(255,255,255,0.95); overflow-y: auto;
-        }
-        .modal-content {
-            max-width: 800px; margin: 60px auto; padding: 40px;
-            animation: modalFade 0.5s ease;
-        }
-        @keyframes modalFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .close-btn { float: right; font-size: 1.5rem; cursor: pointer; font-weight: 100; }
-        .profile-name { font-size: 1.8rem; font-weight: 300; letter-spacing: 0.2em; margin-bottom: 5px; }
-        .profile-title { font-size: 0.9rem; color: var(--accent-pos); margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
-        .profile-job { font-size: 0.85rem; line-height: 2; margin-bottom: 30px; color: #444; }
-        .profile-body { font-size: 0.9rem; line-height: 2; color: #333; text-align: justify; }
-
         .status-bar { background: #fff; padding: 10px 20px; border: 1px solid var(--border); margin-bottom: 20px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
 
         .config-panel { display: grid; grid-template-columns: 350px 1fr; gap: 40px; background: white; padding: 30px; border: 1px solid var(--border); margin-bottom: 40px; }
@@ -103,7 +88,6 @@
     <header>
         <div class="header-top">
             <h1 style="font-weight: 300; letter-spacing: 0.1em; margin:0;">ウェルビーイングと空間要素</h1>
-            
         </div>
         <div class="title-row" style="margin-top:20px;">
             <div id="total-n" style="font-size: 0.8rem; font-weight: bold; letter-spacing: 0.1em;">TOTAL N = 0</div>
@@ -147,10 +131,6 @@
 <script>
 let masterData = [];
 let columns = { attr: [], psych: [], arch: [] };
-
-function openAbout() { document.getElementById('aboutModal').style.display = "block"; }
-function closeAbout() { document.getElementById('aboutModal').style.display = "none"; }
-window.onclick = function(event) { if (event.target == document.getElementById('aboutModal')) closeAbout(); }
 
 const imageUrlMap = {
  "地震による大きな被害の心配をしていない": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_7b44bd1a-fd60-49ab-80df-9c8c1daf0e5b.png",
@@ -218,10 +198,15 @@ window.onload = function () {
         complete: function (results) {
             const raw = results.data;
             masterData = raw.slice(2);
-            // 属性を「性別(2)」「年代(3)」「居住地方(4)」に限定
             columns.attr = [2, 3, 4].map(idx => ({ idx, name: raw[0][idx] }));
             columns.psych = []; for (let i = 10; i <= 52; i++) columns.psych.push({ idx: i, label: raw[1][i] || raw[0][i] });
-            columns.arch = []; for (let i = 53; i <= 98; i++) columns.arch.push({ idx: i, label: raw[1][i] || raw[0][i] });
+            
+            // 建築要素（BB列/53 から CU列/98 まで）から CG列（インデックス84）を除外
+            columns.arch = []; 
+            for (let i = 53; i <= 98; i++) {
+                if (i === 84) continue; // CG列をスキップ
+                columns.arch.push({ idx: i, label: raw[1][i] || raw[0][i] });
+            }
 
             setupFilters();
             setupPsychList();
