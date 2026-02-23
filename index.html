@@ -11,7 +11,6 @@
         :root {
             --primary: #1a1a1a; --accent-pos: #d4a373; --accent-neg: #457b9d;
             --bg: #f8f8f8; --card-bg: #ffffff; --text: #222; --border: #eeeeee;
-            --rank-red: #e74c3c;
         }
         body { font-family: "Helvetica Neue", Arial, "Hiragino Sans", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; }
         .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
@@ -30,6 +29,7 @@
         .status-bar { background: #fff; padding: 10px 20px; border: 1px solid var(--border); margin-bottom: 20px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
 
         .config-panel { display: grid; grid-template-columns: 350px 1fr; gap: 40px; background: white; padding: 30px; border: 1px solid var(--border); margin-bottom: 40px; }
+        .target-section { display: flex; flex-direction: column; }
         .filter-panel { border-left: 1px solid var(--border); padding-left: 40px; }
         .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         
@@ -41,37 +41,35 @@
         .column-header { text-align: center; margin-bottom: 20px; padding: 10px; background: var(--primary); color: white; letter-spacing: 0.2em; font-weight: 200; text-transform: uppercase; font-size: 0.9rem; }
         .n-badge { font-size: 0.7rem; color: #aaa; margin-top: 5px; }
 
-        /* リスト形式への変更 */
+        /* リスト形式の設定 */
         .card-grid { display: flex; flex-direction: column; gap: 12px; min-height: 400px; }
         
         /* 横長カードのデザイン */
         .card { 
             background: var(--card-bg); border: 1px solid var(--border); 
-            display: flex; flex-direction: row; /* 横並び */
-            align-items: center;
+            display: flex; flex-direction: row; align-items: center;
             opacity: 0; transform: translateY(20px);
             transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            min-height: 100px;
+            position: relative; min-height: 100px;
         }
         .card.is-visible { opacity: 1; transform: translateY(0); }
         .card:hover { transform: translateX(5px); box-shadow: 0 5px 20px rgba(0,0,0,0.05); border-color: var(--primary); }
 
+        /* 順位バッジ（控えめな黒に統一） */
         .rank-badge {
-            position: absolute; top: 5px; left: 10px; z-index: 10;
+            position: absolute; top: 8px; left: 10px; z-index: 10;
             font-family: 'Georgia', serif; font-weight: bold;
-            text-shadow: 0 0 10px rgba(255,255,255,1);
+            color: var(--text); font-size: 1.1rem; opacity: 0.3;
+            text-shadow: 0 0 8px rgba(255,255,255,1);
         }
-        .rank-top { color: var(--rank-red); font-size: 2.2rem; }
-        .rank-normal { color: var(--text); font-size: 1rem; opacity: 0.3; top: 10px; }
         
-        /* 画像エリアを固定幅に */
+        /* 画像エリア */
         .card-visual { width: 160px; height: 100px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .card-visual img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* テキストエリアを広げる */
-        .card-content { padding: 10px 20px; flex-grow: 1; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        .card-label { font-size: 0.9rem; font-weight: 500; line-height: 1.4; flex-grow: 1; margin: 0; padding-left: 10px; }
+        /* テキストと数値エリア */
+        .card-content { padding: 10px 25px; flex-grow: 1; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .card-label { font-size: 0.9rem; font-weight: 500; line-height: 1.4; flex-grow: 1; margin: 0; }
         
         .card-footer { display: flex; flex-direction: column; align-items: flex-end; min-width: 100px; }
         .r-value { font-size: 1.8rem; font-weight: 200; font-family: 'Georgia', serif; line-height: 1; }
@@ -81,7 +79,6 @@
         @media (max-width: 1100px) {
             .comparison-layout, .config-panel { grid-template-columns: 1fr; }
             .filter-panel { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; }
-            .card-visual { width: 120px; height: 80px; }
         }
     </style>
 </head>
@@ -98,7 +95,7 @@
         <div class="title-row" style="margin-top:20px;">
             <div id="total-n" style="font-size: 0.8rem; font-weight: bold; letter-spacing: 0.1em;">TOTAL N = 0</div>
         </div>
-        <p class="description-text">本サイトは、「主観的ウェルビーイング」と「空間の構成要素」の相関係数をもとに可視化するツールです。</p>
+        <p class="description-text">本サイトは、「主観的ウェルビーイング」と「空間の構成要素」の相関係数をもとに、影響の大きい要素の把握や、要素同士の比較ができる可視化ツールです。</p>
     </header>
 
     <div class="status-bar" id="status-bar">
@@ -253,15 +250,15 @@ function renderGrid(gridId, nId, data, targetIdx) {
     let displayRank = 1;
     results.forEach((res, i) => {
         if (Math.abs(res.r) < 0.01) return;
+        
         const rank = displayRank++;
-        const rankClass = rank <= 10 ? 'rank-top' : 'rank-normal';
         const img = normMap[superNormalize(res.label)];
         const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="${getIconName(res.label)}" stroke-width="1"></i></div>`;
         
         const card = document.createElement('div');
         card.className = 'card is-visible';
         card.innerHTML = `
-            <div class="rank-badge ${rankClass}">${rank}</div>
+            <div class="rank-badge">${rank}</div>
             <div class="card-visual">${visual}</div>
             <div class="card-content">
                 <div class="card-label">${res.label}</div>
