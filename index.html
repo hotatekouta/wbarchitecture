@@ -209,10 +209,6 @@ window.onload = function () {
             columns.arch = ARCH_COLS.map(idx => ({ idx, label: raw[1][idx] || raw[0][idx] }));
 
             setupFilters();
-            setupPsychList();
-            document.getElementById('data-status').innerText = "SUCCESS: データ同期完了";
-            document.getElementById('main-ui').style.display = 'grid';
-            document.getElementById('results-area').style.display = 'block';
             runSimulation();
         }
     });
