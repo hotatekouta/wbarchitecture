@@ -66,15 +66,27 @@
         .pos { color: var(--accent-pos); } .neg { color: var(--accent-neg); }
         .r-unit { font-size: 0.5rem; color: #aaa; text-transform: uppercase; margin-top: 4px; }
 
-        /* モーダル */
-        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); overflow-y: auto; }
-        .modal-content { max-width: 900px; margin: 40px auto; padding: 60px; line-height: 1.8; color: #333; text-align: justify; }
+        /* モーダル：境界と浮遊感を強化 */
+        .modal { 
+            display: none; position: fixed; z-index: 3000; left: 0; top: 0; 
+            width: 100%; height: 100%; background: rgba(0, 0, 0, 0.2); /* 少し暗くして浮遊感を出す */
+            overflow-y: auto; 
+        }
+        .modal-content { 
+            max-width: 900px; margin: 40px auto; padding: 60px; 
+            background: #ffffff; /* モーダル本体は白 */
+            border: 1px solid #ddd; /* 薄めの枠 */
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); /* 柔らかな影 */
+            line-height: 1.8; color: #333; text-align: justify; 
+            position: relative;
+        }
         .modal-content h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 15px; }
         .modal-content h3 { font-size: 1.1rem; font-weight: 600; margin-top: 40px; margin-bottom: 20px; color: var(--primary); border-left: 4px solid var(--accent-pos); padding-left: 15px; }
         .modal-content p { margin-bottom: 1.5em; font-size: 0.95rem; }
         .modal-content ul { padding-left: 20px; font-size: 0.9rem; }
         .modal-content li { margin-bottom: 10px; }
-        .close-modal { float: right; cursor: pointer; font-size: 2rem; opacity: 0.5; margin-top: -40px; }
+        .close-modal { position: absolute; right: 30px; top: 30px; cursor: pointer; font-size: 2rem; opacity: 0.5; }
+        .close-modal:hover { opacity: 1; }
         .ref-list { font-size: 0.8rem; color: #777; list-style: none; padding-left: 0; }
 
         @media (max-width: 1100px) { .comparison-layout, .config-panel { grid-template-columns: 1fr; } .filter-panel { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; } }
@@ -164,7 +176,7 @@
         <ul class="ref-list">
             <li>・Diener, E., Emmons, R. A., Larsen, R. J., and Griffin, S.:The satisfaction with life scale, Journal of PersonalityAssessment, 49(1),pp.71-75, 1985.</li>
             <li>・佐藤徳，安田朝子：日本語版PANASの作成，性格心理学研究，9 （2），pp.138-139，2001．</li>
-            <li>・前野隆司：幸せのメカニズム 実践・幸福学入門,講談社現代新書,2013</li>
+            <li>・前野隆司：幸せのメカニズム 実踐・幸福学入門,講談社現代新書,2013</li>
         </ul>
     </div>
 </div>
@@ -262,11 +274,8 @@ function setupFilters() {
     const container = document.getElementById('filters'); container.innerHTML = '';
     columns.attr.forEach(col => {
         let uniqueValues = [...new Set(masterData.map(d => d[col.idx]))].filter(v => v != null);
-        if (col.idx === 4) {
-            uniqueValues.sort((a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b));
-        } else {
-            uniqueValues.sort();
-        }
+        if (col.idx === 4) { uniqueValues.sort((a, b) => REGION_ORDER.indexOf(a) - REGION_ORDER.indexOf(b)); }
+        else { uniqueValues.sort(); }
         const div = document.createElement('div');
         div.innerHTML = `<label>${col.name}</label><select class="filter-select" data-idx="${col.idx}" onchange="runSimulation()"><option value="all">ALL</option>${uniqueValues.map(v => `<option value="${v}">${v}</option>`).join('')}</select>`;
         container.appendChild(div);
