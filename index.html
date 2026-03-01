@@ -315,6 +315,7 @@ function runSimulation() {
     const selects = document.querySelectorAll('.filter-select');
     let filteredTotal = masterData;
     selects.forEach(s => { if (s.value !== 'all') { const val = isNaN(s.value) ? s.value : Number(s.value); filteredTotal = filteredTotal.filter(d => d[s.dataset.idx] === val); }});
+    document.getElementById('total-n').innerText = `TOTAL N = ${filteredTotal.length}`;
     const targetIdx = parseInt(document.getElementById('target-psychology').value);
     renderGrid('grid-housing', 'n-housing', filteredTotal.filter(d => superNormalize(String(d[9])) === "住宅"), targetIdx);
     renderGrid('grid-office', 'n-office', filteredTotal.filter(d => superNormalize(String(d[9])) === "オフィス"), targetIdx);
