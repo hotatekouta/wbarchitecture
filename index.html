@@ -34,6 +34,12 @@
 
         .config-panel { display: none; grid-template-columns: 350px 1fr; gap: 40px; background: white; padding: 30px; border: 1px solid var(--border); margin-bottom: 40px; }
         .target-section { display: flex; flex-direction: column; }
+        
+        /* Help Icon Style */
+        .label-with-help { display: flex; align-items: center; gap: 6px; }
+        .help-trigger { cursor: pointer; color: #ccc; transition: color 0.2s; display: flex; align-items: center; }
+        .help-trigger:hover { color: var(--accent-pos); }
+
         .filter-panel { border-left: 1px solid var(--border); padding-left: 40px; }
         .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         
@@ -66,17 +72,16 @@
         .pos { color: var(--accent-pos); } .neg { color: var(--accent-neg); }
         .r-unit { font-size: 0.5rem; color: #aaa; text-transform: uppercase; margin-top: 4px; }
 
-        /* モーダル：境界と浮遊感を強化 */
         .modal { 
             display: none; position: fixed; z-index: 3000; left: 0; top: 0; 
-            width: 100%; height: 100%; background: rgba(0, 0, 0, 0.2); /* 少し暗くして浮遊感を出す */
+            width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); 
             overflow-y: auto; 
         }
         .modal-content { 
             max-width: 900px; margin: 40px auto; padding: 60px; 
-            background: #ffffff; /* モーダル本体は白 */
-            border: 1px solid #ddd; /* 薄めの枠 */
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1); /* 柔らかな影 */
+            background: #ffffff; 
+            border: 1px solid #ddd; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); 
             line-height: 1.8; color: #333; text-align: justify; 
             position: relative;
         }
@@ -111,7 +116,12 @@
 
     <div class="config-panel" id="main-ui">
         <div class="target-section">
-            <label>Target Psychology</label>
+            <div class="label-with-help">
+                <label>Target Psychology</label>
+                <span class="help-trigger" onclick="openAboutAndScroll()" title="心理尺度について詳しく見る">
+                    <i data-lucide="help-circle" size="14"></i>
+                </span>
+            </div>
             <select id="target-psychology" class="target-select" onchange="runSimulation()"></select>
         </div>
         <div class="filter-panel">
@@ -139,39 +149,27 @@
         
         <h3>私たちについて</h3>
         <p>ウェルビーイング空間設計プロジェクト（仮）は、建築物を発注する人やデザインする人、施工する人、実際に使う人など、建築にかかわるすべての人が、そのプロセスやアウトプットにおいて「居心地のよさ」を感じられることを目指しています。</p>
-        <p>周知の通り、建築物は、世の中にあるそのほかの製作物と同様に、それをつくるプロセスや使われていくあいだにおいて、さまざまな人や組織が関わっています。それぞれが役割を持ち、つくられ使われることで、社会が営まれています。</p>
-        <p>現代社会において、ほとんどの活動が、建築物のなかで行われていることを考えると、良い社会をつくり、営むということにおいて、建築物は大きな責任を負っていると考えます。つまり、居心地よくつくられ、居心地よく使われる建築物というあり方を目指すことは、よりよい社会をつくることにつながると私たちは考えています。</p>
 
         <h3>建築設計や施工に関わる人々の「めやす」として</h3>
-        <p>しかし、その「居心地のよい空間や建築物」を作り出すための明確な基準が、世の中にはまだありません。予算や敷地面積など限られた条件のなかで、建築要素の何を優先することが、「居心地のよさ」につながるのでしょうか。天井高でしょうか？それとも窓の大きさでしょうか？</p>
-        <p>これまでは、デザイナーや設計者の経験値や施主の想いなどをもとにつくられてきた「居心地のよさ」ですが、それは時に「ひとりよがり」となり、真の「居心地のよさ」にはつながっていないケースもあると思われます。</p>
-        <p>もちろん、「居心地のよさ」は個人の主観であり、数値的には測れないものがほとんどかもしれません。しかし、先ほども述べたとおり、建築物はたくさんの人がチームとなり、多様な技術や知識を結集してつくられます。そのプロセスにおいて、それぞれが多様な能力を発揮するための「めやす」のようなものの必要性を感じ、本プロジェクトがスタートしました。</p>
-        <p>本ツールが、居心地のよいプロセスで作られた居心地のよい建築物をつくる一助となり、使う人の居心地のよい空間と時間、よりよい社会へとつながっていくことを願っています。</p>
+        <p>しかし、その「居心地のよい空間や建築物」を作り出すための明確な基準が、世の中にはまだありません。本プロジェクトは多様な技術や知識を結集してつくられる建築プロセスのなかで、それぞれが多様な能力を発揮するための「めやす」のようなものの必要性を感じスタートしました。</p>
 
         <h3>調査対象と方法</h3>
-        <p>日常生活の中で室内の滞在時間の長い住宅とオフィスを対象に、主観的ウェルビーイングに影響する構成要素のアンケートを実施し（有効回答数1,040 名）、相関分析によって住宅79 項目、オフィス70 項目、因子分析によって、住宅7 因子、オフィス7 因子の主観的ウェルビーイングに影響する構成要素を明らかにしました。</p>
-        <p>本ツールは明らかにした構成要素をもとに、建築空間の構成要素を定量的かつ網羅的、具体的に提示し、主観的ウェルビーイングを高める空間づくりの要素をシミュレーションできるツールとして開発しました。<br>
-        <a href="#" style="color:var(--accent-pos);">本調査についての詳細はこちら</a></p>
+        <p>住宅とオフィスを対象にアンケートを実施（有効回答数1,040 名）。相関分析等によって主観的ウェルビーイングに影響する空間構成要素を明らかにしました。</p>
 
         <h3>本ツールの使い方</h3>
         <ul>
-            <li><strong>Target Psychology:</strong> 向上させたい心理的指標（幸福度、満足度、気分など）を選択します。</li>
+            <li><strong>Target Psychology:</strong> 向上させたい心理的指標を選択します。</li>
             <li><strong>Attribute Filters:</strong> 対象となる居住者の性別、年代、居住地方を絞り込むことができます。</li>
-            <li><strong>Residential / Office:</strong> 住宅とオフィスにおける各建築要素の相関係数が、高い順（プラスの相関）にランキング形式で表示されます。</li>
             <li><strong>相関係数（Correlation）:</strong> 0.1以上を相関あり、0.2以上を弱い相関、0.4以上を中程度の相関として解釈します。</li>
         </ul>
 
-        <h3>本ツールで採用している心理尺度について</h3>
-        <p><strong>・人生満足度尺度（SWLS）：</strong>Diener らが主観的幸福感を計る目的で開発したもので、比較的長いスパンにおける主観的幸福度を確認する尺度とされている。本調査では、以下5 項目について質問した。「ほとんどの面で、私の人生は私の理想に近い」「私の人生は、とてもすばらしい状態だ」「私は自分の人生に満足している」「私はこれまで、自分の人生に求める大切なものを得てきた」「もう一度人生をやり直せるとしても、ほとんど何も変えないだろう」</p>
+        <h3 id="psych-scale-info">本ツールで採用している心理尺度について</h3>
+        <p><strong>・人生満足度尺度（SWLS）：</strong>Diener らが主観的幸福感を計る目的で開発したもので、比較的長いスパンにおける主観的幸福度を確認する尺度とされている。</p>
         <p><strong>・主体性4項目：</strong>（※ここに項目の詳細が入ります）</p>
-        <p><strong>・ポジティブ感情（PA）/ ネガティブ感情（NA）：</strong>David Watson & Lee Anna Clark らが開発した気分評価尺度（日本語版PANAS）。ポジティブ感情「活気のある」「誇らしい」「強気な」等8項目、ネガティブ感情「びくびくした」「うろたえた」「心配した」等8項目の計16項目について、過去1ヶ月の体験を質問した。</p>
-        <p><strong>・幸せの4因子：</strong>前野らが提唱する国内の幸福研究の主要概念。本調査では短縮版（8項目）を採用。「私は有能である」「私は社会・組織の要請に応えている」「私は人の喜ぶ顔が見たい」「私を大切に思ってくれる人たちがいる」等の項目について質問した。</p>
+        <p><strong>・ポジティブ感情（PA）/ ネガティブ感情（NA）：</strong>日本語版PANAS。ポジティブ感情「活気のある」「誇らしい」等8項目、ネガティブ感情「びくびくした」「うろたえた」等8項目の計16項目について質問した。</p>
+        <p><strong>・幸せの4因子：</strong>前野らが提唱する国内の幸福研究の主要概念。本調査では短縮版（8項目）を採用。</p>
 
-        <h3>ウェルビーイング空間設計プロジェクト（仮）メンバー</h3>
-        <p>前野隆司　武蔵野大学ウェルビーイング学部長・教授、慶應義塾大学名誉教授<br>
-        山形与志樹　慶應義塾大学大学院システムデザイン・マネジメント研究科 教授<br>
-        （※残りのメンバーの方々をここに追加してください）</p>
-
+        
         <h3 style="border-left:none; padding-left:0; border-top:1px solid #eee; padding-top:20px;">【引用文献】</h3>
         <ul class="ref-list">
             <li>・Diener, E., Emmons, R. A., Larsen, R. J., and Griffin, S.:The satisfaction with life scale, Journal of PersonalityAssessment, 49(1),pp.71-75, 1985.</li>
@@ -185,8 +183,25 @@
 let masterData = [];
 let columns = { attr: [], psych: [], arch: [] };
 
-function openAbout() { document.getElementById('aboutModal').style.display = "block"; document.body.style.overflow = "hidden"; }
-function closeAbout() { document.getElementById('aboutModal').style.display = "none"; document.body.style.overflow = "auto"; }
+function openAbout() { 
+    document.getElementById('aboutModal').style.display = "block"; 
+    document.body.style.overflow = "hidden"; 
+}
+function closeAbout() { 
+    document.getElementById('aboutModal').style.display = "none"; 
+    document.body.style.overflow = "auto"; 
+}
+
+// アイコンクリック時にモーダルを開いて特定の場所へスクロール
+function openAboutAndScroll() {
+    openAbout();
+    setTimeout(() => {
+        const element = document.getElementById('psych-scale-info');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 100);
+}
 
 const imageUrlMap = {
 "地震による被害の心配はない": "https://storage.googleapis.com/studio-design-asset-files/projects/rROn1rzYWA/s-466x247_webp_7b44bd1a-fd60-49ab-80df-9c8c1daf0e5b.png",
@@ -240,13 +255,6 @@ const imageUrlMap = {
 
 function superNormalize(s) { return s ? String(s).replace(/[\s\n\r（）\(\)]/g, "") : ""; }
 const normMap = {}; for (let k in imageUrlMap) { normMap[superNormalize(k)] = imageUrlMap[k]; }
-
-function getIconName(label) {
-    const l = superNormalize(label);
-    if (l.includes('安心')) return 'shield';
-    if (l.includes('音')) return 'volume-2';
-    return 'component';
-}
 
 const PSYCH_COLS = [10, 11, 12, 13, 18, 19, 20, 21, 22, 23, 24, 25, 28, 29, 31, 34, 35, 44];
 const ARCH_COLS = [51, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99];
@@ -307,13 +315,12 @@ function renderGrid(gridId, nId, data, targetIdx) {
     results.forEach((res, i) => {
         if (Math.abs(res.r) < 0.01) return;
         const img = normMap[superNormalize(res.label)];
-        const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"><i data-lucide="component" size="32"></i></div>`;
+        const visual = img ? `<img src="${img}" loading="lazy">` : `<div class="icon-placeholder"></div>`;
         const card = document.createElement('div');
         card.className = 'card is-visible';
         card.innerHTML = `<div class="rank-badge">${i+1}</div><div class="card-visual">${visual}</div><div class="card-content"><div class="card-label">${res.label}</div><div class="card-footer"><span class="r-value ${res.r>=0?'pos':'neg'}">${res.r.toFixed(2)}</span><span class="r-unit">Correlation</span></div></div>`;
         grid.appendChild(card);
     });
-    lucide.createIcons();
 }
 
 function runSimulation() {
