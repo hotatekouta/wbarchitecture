@@ -37,7 +37,7 @@
         
         /* Help Icon Style */
         .label-with-help { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-        .help-trigger { cursor: pointer; color: #bbb; transition: color 0.2s; display: inline-flex; align-items: center; }
+        .help-trigger { cursor: pointer; color: #000; transition: color 0.2s; display: inline-flex; align-items: center; }
         .help-trigger:hover { color: var(--accent-pos); }
 
         .filter-panel { border-left: 1px solid var(--border); padding-left: 40px; }
@@ -114,7 +114,7 @@
             <div class="label-with-help">
                 <label>Target Psychology</label>
                 <span class="help-trigger" onclick="openAboutAndScroll()" title="心理尺度について詳しく見る">
-                    <i data-lucide="help-circle" size="14"></i>
+                    <i data-lucide="help-circle" size="10"></i>
                 </span>
             </div>
             <select id="target-psychology" class="target-select" onchange="runSimulation()"></select>
